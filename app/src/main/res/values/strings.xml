@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Running Tracking - YT</string>
+    <string name="google_maps_key">AIzaSyAqhHIjTDIBleVj7YVN5K3aAfsEN9ZFLL0</string>
 </resources>
