@@ -28,6 +28,7 @@
         </activity>
 
         <!--         Dibutuhkan untuk google maps
+        meta data adalah cara untuk menyimpan nilai yang dapat digunakan oleh seluruh projek
         1. untuk google play
         2. API Key untuk google maps-->
         <meta-data
