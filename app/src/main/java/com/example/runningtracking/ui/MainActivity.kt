@@ -1,9 +1,10 @@
-package com.example.runningtracking_yt
+package com.example.runningtracking.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.example.runningtracking_yt.db.RunDAO
+import com.example.runningtracking.R
+import com.example.runningtracking.db.RunDAO
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

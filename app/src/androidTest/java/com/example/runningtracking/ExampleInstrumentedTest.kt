@@ -1,4 +1,4 @@
-package com.example.runningtracking_yt
+package com.example.runningtracking
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

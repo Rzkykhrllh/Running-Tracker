@@ -1,4 +1,4 @@
-package com.example.runningtracking_yt.db
+package com.example.runningtracking.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

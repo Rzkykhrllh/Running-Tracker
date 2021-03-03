@@ -1,4 +1,4 @@
-package com.example.runningtracking_yt
+package com.example.runningtracking
 
 import org.junit.Test
 

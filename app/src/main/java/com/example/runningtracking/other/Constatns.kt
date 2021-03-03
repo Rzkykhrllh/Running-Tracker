@@ -1,4 +1,4 @@
-package com.example.runningtracking_yt.other
+package com.example.runningtracking.other
 
 object Constatns {
 
