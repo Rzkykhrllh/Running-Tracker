@@ -33,6 +33,10 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
@@ -92,7 +96,9 @@ dependencies {
     /*Dagger Hilt Depencies*/
 
     // Android KTX for viewModels()
-    implementation "androidx.activity:activity-ktx:1.1.0"
+    implementation 'androidx.appcompat:appcompat:1.1.0-rc01' // this is needed to use the updated AppCompatActivity
+    implementation 'androidx.activity:activity-ktx:1.0.0-rc01' // or remove -ktx if not using kotlin
+    implementation 'androidx.fragment:fragment-ktx:1.1.0-rc04' // or remove -ktx if not using kotlin
 
     // Dagger Hilt
     implementation "com.google.dagger:hilt-android:2.28-alpha"
