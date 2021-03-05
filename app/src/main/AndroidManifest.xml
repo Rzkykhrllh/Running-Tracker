@@ -10,8 +10,6 @@
     <!-- Service    -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
-    
-
     <application
         android:name="com.example.runningtracking.BaseApplication"
         android:allowBackup="true"
@@ -27,6 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <service android:name=".service.TrackingService"
+            android:foregroundServiceType="location"/>
 
         <!--         Dibutuhkan untuk google maps
         meta data adalah cara untuk menyimpan nilai yang dapat digunakan oleh seluruh projek

@@ -11,7 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.runningtracking.R
 import com.example.runningtracking.databinding.FragmentRunBinding
-import com.example.runningtracking.other.Constatns.REQUEST_CODE_LOCATION_PERMISSIONS
+import com.example.runningtracking.other.Constants.REQUEST_CODE_LOCATION_PERMISSIONS
 import com.example.runningtracking.other.TrackingUtility
 import com.example.runningtracking.ui.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
