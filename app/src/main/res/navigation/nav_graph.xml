@@ -5,6 +5,13 @@
     android:id="@+id/nav_graph.xml"
     app:startDestination="@id/setUpFragment">
 
+    <!-- Globar action, bisa dipanggil dari mana saja-->
+
+    <action
+        android:id="@+id/action_globar_tracking_fragment"
+        app:destination="@id/trackingFragment"
+        app:launchSingleTop="true"/> <!-- Biar activitiynya cuma 1, gak buat baru-->
+
     <fragment
         android:id="@+id/trackingFragment"
         android:name="com.example.runningtracking.ui.fragment.TrackingFragment"
