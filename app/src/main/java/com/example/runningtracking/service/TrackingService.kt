@@ -86,10 +86,13 @@ class TrackingService : LifecycleService() {
                         isFirstRun = false
                     } else {
                         Timber.d("resumed the service")
+                        startNotificationService()
+
                     }
                 }
                 ACTION_PAUSE_SERVICE -> {
                     Timber.d("Pause Service")
+                    onPause()
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stop Service")
@@ -97,6 +100,10 @@ class TrackingService : LifecycleService() {
             }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun onPause(){
+        isTracking.postValue(false)
     }
 
 

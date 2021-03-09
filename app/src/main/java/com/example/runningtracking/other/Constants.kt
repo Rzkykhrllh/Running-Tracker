@@ -1,5 +1,8 @@
 package com.example.runningtracking.other
 
+import android.graphics.Color
+import com.google.android.gms.maps.model.Polyline
+
 object Constants {
 
     const val RUNNING_DATABASE_NAME = "running_db"
@@ -14,6 +17,10 @@ object Constants {
 
     const val LOCATION_UPDATE_INTERVAL = 5000L
     const val FASTEST_LOCATION_UPDATE = 2000L
+
+    const val POLYLINE_COLOR = Color.CYAN
+    const val POLYLINE_WIDTH = 8F
+    const val MAP_ZOOM = 20F
 
     const val CHANNEL_ID = "tracking_channel"
     const val CHANNEL_NAME = "Tracking"
