@@ -15,6 +15,7 @@ import com.example.runningtracking.other.Constants.ACTION_START_OR_RESUME_SERVIC
 import com.example.runningtracking.other.Constants.MAP_ZOOM
 import com.example.runningtracking.other.Constants.POLYLINE_COLOR
 import com.example.runningtracking.other.Constants.POLYLINE_WIDTH
+import com.example.runningtracking.other.TrackingUtility
 import com.example.runningtracking.service.TrackingService
 import com.example.runningtracking.service.polyline
 import com.example.runningtracking.service.polylines
@@ -35,6 +36,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
     private var isTracking = false
     private var pathPoints = mutableListOf<polyline>()
+    
+    private var curTimeinMilli = 0L
 
 
     override fun onCreateView(
@@ -83,6 +86,13 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
             pathPoints = it
             addLatestPolyline()
             moveCameraToUser()
+        })
+        
+        TrackingService.timeRunInMillis.observe(viewLifecycleOwner, Observer{
+            curTimeinMilli = it
+
+            var formattdTime = TrackingUtility.getFormattedStopwatch(curTimeinMilli, true)
+            binding.tvTimer.setText(formattdTime)
         })
 
     }

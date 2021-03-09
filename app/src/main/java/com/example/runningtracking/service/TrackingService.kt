@@ -8,6 +8,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.location.Location
 import android.os.Build
 import android.os.Looper
@@ -26,11 +27,16 @@ import com.example.runningtracking.other.Constants.CHANNEL_NAME
 import com.example.runningtracking.other.Constants.FASTEST_LOCATION_UPDATE
 import com.example.runningtracking.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.example.runningtracking.other.Constants.NOTIFICATION_ID
+import com.example.runningtracking.other.Constants.TIMER_DELAY
 import com.example.runningtracking.other.TrackingUtility
 import com.example.runningtracking.ui.MainActivity
 import com.google.android.gms.location.*
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
@@ -49,9 +55,16 @@ class TrackingService : LifecycleService() {
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient // Objek Buat request lokasi
 
+    private var timeRunInSeconds = MutableLiveData<Long>() // Waktu buat update notfikasi
+
+
     companion object {
         val isTracking = MutableLiveData<Boolean>()
         val pathPoints = MutableLiveData<polylines>() // Live data of list of line
+
+        var timeRunInMillis = MutableLiveData<Long>() // Waktu untuk ditampilkan di halaman Tracking
+
+
     }
 
 
@@ -59,6 +72,9 @@ class TrackingService : LifecycleService() {
     private fun postInitValue() {
         isTracking.postValue(false)
         pathPoints.postValue(mutableListOf())
+        
+        timeRunInSeconds.postValue(0L)
+        timeRunInMillis.postValue(0L)
     }
 
     override fun onCreate() {
@@ -82,17 +98,17 @@ class TrackingService : LifecycleService() {
                     Timber.d("Started or resumed the service")
 
                     if (isFirstRun) {
-                        startNotificationService()
+                        startForegroundService()
                         isFirstRun = false
                     } else {
                         Timber.d("resumed the service")
-                        startNotificationService()
+                        startTimer()
 
                     }
                 }
                 ACTION_PAUSE_SERVICE -> {
                     Timber.d("Pause Service")
-                    onPause()
+                    pauseService()
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stop Service")
@@ -102,8 +118,42 @@ class TrackingService : LifecycleService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun onPause(){
+    private var isTimerEnabled = false
+    private var lapTime = 0L
+    private var timeRun = 0L
+    private var timeStarted = 0L
+    private var lastSecondTimeStamp = 0L
+
+    private fun startTimer(){
+        addEmptyPolyline()
+        isTracking.postValue(true)
+        
+        timeStarted = System.currentTimeMillis()
+        isTimerEnabled = true
+
+        CoroutineScope(Dispatchers.Main).launch {
+            while (isTracking.value!!){
+                // Selisih waktu sekarang dan timer dimulau
+                lapTime = System.currentTimeMillis() - timeStarted
+
+                // Update live data value
+                timeRunInMillis.postValue(lapTime)
+
+                // update time in second
+                if (timeRunInMillis.value!! >= lastSecondTimeStamp + 1000L){ // cek apakah udah lewat sedetik
+                    timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1L)
+                    lastSecondTimeStamp = 1000L
+                }
+
+                delay(TIMER_DELAY) // update timer secara berkala, jadi gak setiap saat, user sih gak terlalu sadar
+            }
+            timeRun += lapTime
+        }
+    }
+
+    private fun pauseService(){
         isTracking.postValue(false)
+        isTimerEnabled = false
     }
 
 
@@ -168,10 +218,10 @@ class TrackingService : LifecycleService() {
         ?: pathPoints.postValue(mutableListOf(mutableListOf())) // Saat pathpoints null, maka buat list of list pertama
 
 
+    // Start service
+    private fun startForegroundService() {
 
-    private fun startNotificationService() {
-
-        addEmptyPolyline()
+        startTimer()
         isTracking.postValue(true)
 
         //val notificationManager = NotificationManagerCompat.from(this)

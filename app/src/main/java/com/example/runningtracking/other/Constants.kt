@@ -26,4 +26,6 @@ object Constants {
     const val CHANNEL_NAME = "Tracking"
     const val NOTIFICATION_ID = 1
 
+    const val TIMER_DELAY = 50L
+
 }
