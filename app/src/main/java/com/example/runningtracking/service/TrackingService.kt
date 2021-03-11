@@ -33,11 +33,13 @@ import com.example.runningtracking.ui.MainActivity
 import com.google.android.gms.location.*
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.maps.model.LatLng
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 
 /* Jadi garis adalah kumpulan titik-titik
@@ -48,14 +50,19 @@ typealias polylines = MutableList<polyline>
 
 /* Karena bakal ngeobserve live-data
 * dan live data hanya bisa di observe di dengan fungsi observe
-* dan fungsi observe membutuhkan lige cycle owner*/
+* dan fungsi observe membutuhkan life cycle owner*/
+@AndroidEntryPoint
 class TrackingService : LifecycleService() {
 
     private var isFirstRun = true
 
+    @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient // Objek Buat request lokasi
 
     private var timeRunInSeconds = MutableLiveData<Long>() // Waktu buat update notfikasi
+
+    @Inject
+    lateinit var baseNotificationBuilder : NotificationCompat.Builder
 
 
     companion object {
@@ -82,7 +89,6 @@ class TrackingService : LifecycleService() {
         Timber.d("Service-desu onCreate")
 
         postInitValue()
-        fusedLocationProviderClient = FusedLocationProviderClient(this)
 
         // Observe isTracking
         isTracking.observe(this, Observer {
@@ -232,32 +238,11 @@ class TrackingService : LifecycleService() {
             createNotficationChannel(notificationManager)
         }
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .apply {
-                setAutoCancel(false) // gak bisa dihilangin
-                setOngoing(true) // gabisa di clear make tombol x
-                setContentText("Runing App")
-                setSubText("00:00:00")
-                setContentIntent(getMainActivityPendingIntent())
-                setSmallIcon(R.drawable.ic_graph)
-                priority = NotificationCompat.PRIORITY_HIGH
-
-            }.build()
 
         // Start foreground service, yg ada notifnya
-        startForeground(NOTIFICATION_ID, notification)
+        startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
 
     }
-
-    // make public intennt for notification
-    private fun getMainActivityPendingIntent() = PendingIntent.getActivity(
-        this,
-        0,
-        Intent(this, MainActivity::class.java).also {
-            it.action = ACTION_SHOW_TRACKING_FRAGMENT
-        },
-        FLAG_UPDATE_CURRENT
-    )
 
 
     @RequiresApi(Build.VERSION_CODES.O) // Sama kek IF, tapi cool way
