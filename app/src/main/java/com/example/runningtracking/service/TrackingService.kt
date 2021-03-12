@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.app.PendingIntent.getBroadcast
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -64,14 +65,14 @@ class TrackingService : LifecycleService() {
     @Inject
     lateinit var baseNotificationBuilder : NotificationCompat.Builder
 
+    lateinit var curNotificationBuilder : NotificationCompat.Builder
+
 
     companion object {
         val isTracking = MutableLiveData<Boolean>()
         val pathPoints = MutableLiveData<polylines>() // Live data of list of line
 
         var timeRunInMillis = MutableLiveData<Long>() // Waktu untuk ditampilkan di halaman Tracking
-
-
     }
 
 
@@ -84,27 +85,33 @@ class TrackingService : LifecycleService() {
         timeRunInMillis.postValue(0L)
     }
 
+    // create service class
     override fun onCreate() {
         super.onCreate()
         Timber.d("Service-desu onCreate")
 
         postInitValue()
 
+        curNotificationBuilder = baseNotificationBuilder
+
         // Observe isTracking
         isTracking.observe(this, Observer {
-            updateLocationTracking(it)
+            updateLocationTracking(it) // start request location from maps
+            updateNotificationTrackingState(it) // change action in notification
         })
     }
 
+    // Start Service from fragment
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.d("Service-desu onStartCommand")
+
         intent?.let {
             when (it.action) {
-                ACTION_START_OR_RESUME_SERVICE -> {
+                ACTION_START_OR_RESUME_SERVICE -> { // Start-resume service
                     Timber.d("Started or resumed the service")
 
                     if (isFirstRun) {
-                        startForegroundService()
+                        startForegroundService() // set notification, start timer
                         isFirstRun = false
                     } else {
                         Timber.d("resumed the service")
@@ -112,11 +119,11 @@ class TrackingService : LifecycleService() {
 
                     }
                 }
-                ACTION_PAUSE_SERVICE -> {
+                ACTION_PAUSE_SERVICE -> { // Pause Service
                     Timber.d("Pause Service")
                     pauseService()
                 }
-                ACTION_STOP_SERVICE -> {
+                ACTION_STOP_SERVICE -> { // Stop Service
                     Timber.d("Stop Service")
                 }
             }
@@ -130,6 +137,7 @@ class TrackingService : LifecycleService() {
     private var timeStarted = 0L
     private var lastSecondTimeStamp = 0L
 
+    // Start Timer
     private fun startTimer(){
         addEmptyPolyline()
         isTracking.postValue(true)
@@ -148,7 +156,7 @@ class TrackingService : LifecycleService() {
                 // update time in second
                 if (timeRunInMillis.value!! >= lastSecondTimeStamp + 1000L){ // cek apakah udah lewat sedetik
                     timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1L)
-                    lastSecondTimeStamp = 1000L
+                    lastSecondTimeStamp += 1000L
                 }
 
                 delay(TIMER_DELAY) // update timer secara berkala, jadi gak setiap saat, user sih gak terlalu sadar
@@ -157,13 +165,55 @@ class TrackingService : LifecycleService() {
         }
     }
 
+    // Pause service
     private fun pauseService(){
         isTracking.postValue(false)
         isTimerEnabled = false
     }
 
+    /*
+    * Update Notification (terutama actionnya)
+    * Saat State Berubah dari running ke gak running
+    * dan vice versa
+    * */
+    private fun updateNotificationTrackingState(isTracking: Boolean){
+        val notificationActionText =
+            if (isTracking) "Pause" else "Resume"
 
-    // Update location
+        val pendingIntent = if (isTracking){
+            val pauseIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_PAUSE_SERVICE
+            }
+            PendingIntent.getService(this, 1, pauseIntent, FLAG_UPDATE_CURRENT)
+
+        } else{
+            val resumeIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_START_OR_RESUME_SERVICE
+            }
+            PendingIntent.getService(this, 1, resumeIntent, FLAG_UPDATE_CURRENT)
+        }
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE)  as NotificationManager
+
+        // Menghapus semua action yang ada
+        curNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
+            isAccessible = true
+            set(curNotificationBuilder, ArrayList<NotificationCompat.Action>())
+        }
+
+        // Add new Action
+        curNotificationBuilder = baseNotificationBuilder
+            .addAction(R.drawable.ic_baseline_pause_24, notificationActionText, pendingIntent)
+
+        notificationManager.notify(NOTIFICATION_ID, curNotificationBuilder.build())
+    }
+
+
+
+    /*
+    * Update Notification
+    * membuat request notifikasi dari map
+    * dipanggil ketika state IsRunning Berubah*/
     @SuppressLint("MissingPermission")
     private fun updateLocationTracking(isTracking: Boolean) {
         if (isTracking) {
@@ -174,6 +224,7 @@ class TrackingService : LifecycleService() {
                     priority = PRIORITY_HIGH_ACCURACY
                 }
 
+                // Request lokasi dari map
                 fusedLocationProviderClient.requestLocationUpdates(
                     request,
                     locationCallback, // Callback
@@ -185,7 +236,8 @@ class TrackingService : LifecycleService() {
         }
     }
 
-    // get new location and add it to live data
+    /* Define callback when get location
+    * Add new location to list of point*/
     val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult?) {
             super.onLocationResult(result)
@@ -216,7 +268,7 @@ class TrackingService : LifecycleService() {
         }
     }
 
-    // Menambahkan pathpoints pada
+    // Menambahkan pathpoints pada livedata
     private fun addEmptyPolyline() = pathPoints.value?.apply {
         add(mutableListOf())
         pathPoints.postValue(this)
@@ -230,7 +282,6 @@ class TrackingService : LifecycleService() {
         startTimer()
         isTracking.postValue(true)
 
-        //val notificationManager = NotificationManagerCompat.from(this)
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -242,9 +293,21 @@ class TrackingService : LifecycleService() {
         // Start foreground service, yg ada notifnya
         startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
 
+        // Update timer di notifikasi
+        timeRunInSeconds.observe(this, Observer {
+
+            var curTime = TrackingUtility.getFormattedStopwatch(it*1000L)
+            val notification = curNotificationBuilder
+                .setContentText(curTime)
+
+//            Timber.d("$it and ${curTime}")
+            notificationManager.notify(NOTIFICATION_ID, notification.build())
+        })
+
     }
 
 
+    // Create notification channel for android O above
     @RequiresApi(Build.VERSION_CODES.O) // Sama kek IF, tapi cool way
     private fun createNotficationChannel(notificationManager: NotificationManager) {
         val channel =
