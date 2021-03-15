@@ -56,6 +56,7 @@ typealias polylines = MutableList<polyline>
 class TrackingService : LifecycleService() {
 
     private var isFirstRun = true
+    var serviceKilled = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient // Objek Buat request lokasi
@@ -125,10 +126,23 @@ class TrackingService : LifecycleService() {
                 }
                 ACTION_STOP_SERVICE -> { // Stop Service
                     Timber.d("Stop Service")
+                    killService()
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    /* Function to stop service*/
+    private fun killService(){
+
+        serviceKilled = true
+        isFirstRun = true
+        pauseService() // di puase dulu
+        postInitValue() // balikin variabel ke nilai awal
+        stopForeground(true)  // stop foreground service
+        stopSelf() // stop service
+
     }
 
     private var isTimerEnabled = false
@@ -205,7 +219,10 @@ class TrackingService : LifecycleService() {
         curNotificationBuilder = baseNotificationBuilder
             .addAction(R.drawable.ic_baseline_pause_24, notificationActionText, pendingIntent)
 
-        notificationManager.notify(NOTIFICATION_ID, curNotificationBuilder.build())
+
+        if (!serviceKilled){
+            notificationManager.notify(NOTIFICATION_ID, curNotificationBuilder.build())
+        }
     }
 
 
@@ -296,12 +313,14 @@ class TrackingService : LifecycleService() {
         // Update timer di notifikasi
         timeRunInSeconds.observe(this, Observer {
 
-            var curTime = TrackingUtility.getFormattedStopwatch(it*1000L)
-            val notification = curNotificationBuilder
-                .setContentText(curTime)
+            if (!serviceKilled){
+                var curTime = TrackingUtility.getFormattedStopwatch(it*1000L)
+                val notification = curNotificationBuilder
+                    .setContentText(curTime)
 
 //            Timber.d("$it and ${curTime}")
-            notificationManager.notify(NOTIFICATION_ID, notification.build())
+                notificationManager.notify(NOTIFICATION_ID, notification.build())
+            }
         })
 
     }

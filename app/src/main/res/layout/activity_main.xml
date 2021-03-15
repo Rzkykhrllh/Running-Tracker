@@ -19,6 +19,7 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
+            android:background="@color/white"
             android:layout_height="match_parent">
 
             <com.google.android.material.textview.MaterialTextView
@@ -27,7 +28,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:text="Running App"
-                android:textColor="@android:color/white"
+                android:textColor="@android:color/holo_purple"
                 android:textSize="30sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"

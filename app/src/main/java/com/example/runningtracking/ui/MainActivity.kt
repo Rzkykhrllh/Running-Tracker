@@ -23,7 +23,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        /* Bisa dipanggil kalau dari style gada action bar*/
+        setSupportActionBar(binding.toolbar)
 
         /* Ketika mainactivity di (re)create
         * cek apakah yg manggil itu service, kalau iya navigate ke tracking fragment*/
@@ -34,17 +39,12 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.navHostFragment)
         // Passing each menu ID as a set of Ids because each
 
-      /*  val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_home, R.id.navigation_order, R.id.navigation_profile
-            )
-        )*/
 
         // menu should be considered as top level destinations.
         navView.setupWithNavController(navController)
-
-
     }
+
+
 
     /* Apabila activity gak dibuat baru, maka cek intentnya juga*/
     override fun onNewIntent(intent: Intent?) {
