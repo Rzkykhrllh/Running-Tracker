@@ -73,7 +73,7 @@ class TrackingService : LifecycleService() {
         val isTracking = MutableLiveData<Boolean>()
         val pathPoints = MutableLiveData<polylines>() // Live data of list of line
 
-        var timeRunInMillis = MutableLiveData<Long>() // Waktu untuk ditampilkan di halaman Tracking
+        var timeRunInMillis = MutableLiveData<Long>() // Waktu untuk ditampilkan di Timer TrackingFragment
     }
 
 
@@ -133,6 +133,44 @@ class TrackingService : LifecycleService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    // Start Tracking service
+    private fun startForegroundService() {
+
+        startTimer()
+        isTracking.postValue(true)
+
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotficationChannel(notificationManager)
+        }
+
+
+        // Start foreground service, yg ada notifnya
+        startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
+
+        // Update timer di notifikasi
+        timeRunInSeconds.observe(this, Observer {
+
+            if (!serviceKilled){
+                var curTime = TrackingUtility.getFormattedStopwatch(it*1000L)
+                val notification = curNotificationBuilder
+                    .setContentText(curTime)
+
+//            Timber.d("$it and ${curTime}")
+                notificationManager.notify(NOTIFICATION_ID, notification.build())
+            }
+        })
+
+    }
+
+    // Pause service
+    private fun pauseService(){
+        isTracking.postValue(false)
+        isTimerEnabled = false
+    }
+
     /* Function to stop service*/
     private fun killService(){
 
@@ -146,28 +184,31 @@ class TrackingService : LifecycleService() {
     }
 
     private var isTimerEnabled = false
-    private var lapTime = 0L
-    private var timeRun = 0L
+    private var timeRun = 0L // Total waktu berlari
     private var timeStarted = 0L
     private var lastSecondTimeStamp = 0L
+
 
     // Start Timer
     private fun startTimer(){
         addEmptyPolyline()
         isTracking.postValue(true)
+
+        var lapTime = 0L // selisih waktu
         
         timeStarted = System.currentTimeMillis()
         isTimerEnabled = true
 
         CoroutineScope(Dispatchers.Main).launch {
             while (isTracking.value!!){
-                // Selisih waktu sekarang dan timer dimulau
+
+                // Selisih waktu sekarang dan timer dimulai
                 lapTime = System.currentTimeMillis() - timeStarted
 
-                // Update live data value
-                timeRunInMillis.postValue(lapTime)
+                // Update time in milis -> timer in fragment
+                timeRunInMillis.postValue(lapTime+timeRun)
 
-                // update time in second
+                // update time in second -> update timer in notif
                 if (timeRunInMillis.value!! >= lastSecondTimeStamp + 1000L){ // cek apakah udah lewat sedetik
                     timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1L)
                     lastSecondTimeStamp += 1000L
@@ -176,14 +217,10 @@ class TrackingService : LifecycleService() {
                 delay(TIMER_DELAY) // update timer secara berkala, jadi gak setiap saat, user sih gak terlalu sadar
             }
             timeRun += lapTime
+            Timber.d("Total waktu berlari : $timeRun")
         }
     }
 
-    // Pause service
-    private fun pauseService(){
-        isTracking.postValue(false)
-        isTimerEnabled = false
-    }
 
     /*
     * Update Notification (terutama actionnya)
@@ -224,7 +261,6 @@ class TrackingService : LifecycleService() {
             notificationManager.notify(NOTIFICATION_ID, curNotificationBuilder.build())
         }
     }
-
 
 
     /*
@@ -291,39 +327,6 @@ class TrackingService : LifecycleService() {
         pathPoints.postValue(this)
     }
         ?: pathPoints.postValue(mutableListOf(mutableListOf())) // Saat pathpoints null, maka buat list of list pertama
-
-
-    // Start service
-    private fun startForegroundService() {
-
-        startTimer()
-        isTracking.postValue(true)
-
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotficationChannel(notificationManager)
-        }
-
-
-        // Start foreground service, yg ada notifnya
-        startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
-
-        // Update timer di notifikasi
-        timeRunInSeconds.observe(this, Observer {
-
-            if (!serviceKilled){
-                var curTime = TrackingUtility.getFormattedStopwatch(it*1000L)
-                val notification = curNotificationBuilder
-                    .setContentText(curTime)
-
-//            Timber.d("$it and ${curTime}")
-                notificationManager.notify(NOTIFICATION_ID, notification.build())
-            }
-        })
-
-    }
 
 
     // Create notification channel for android O above
