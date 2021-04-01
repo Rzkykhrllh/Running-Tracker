@@ -28,4 +28,9 @@ object Constants {
 
     const val TIMER_DELAY = 50L
 
+    const val SHARED_PREFERENCES_NAME = "sharedPref"
+    const val KEY_FIRST_TIME_TOGGLE = "KEY_FIRST_TIME_TOGGLE"
+    const val KEY_FOR_NAME = "KEY_FOR_NAME"
+    const val KEY_FOR_WEIGHT = "KEY_FOR_WEIGHT"
+
 }

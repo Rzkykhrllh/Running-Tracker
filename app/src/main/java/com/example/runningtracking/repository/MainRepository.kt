@@ -5,7 +5,7 @@ import com.example.runningtracking.db.RunDAO
 import javax.inject.Inject
 
 // Tugas repository adalah mengumpulkan data dari semua source
-class   MainRepository @Inject constructor(
+class MainRepository @Inject constructor(
     val runDao : RunDAO
 ) {
 
