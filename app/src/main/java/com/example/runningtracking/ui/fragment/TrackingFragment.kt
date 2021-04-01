@@ -8,6 +8,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.runningtracking.R
+import com.example.runningtracking.adapter.RunAdapter
 import com.example.runningtracking.databinding.FragmentTrackingBinding
 import com.example.runningtracking.db.Run
 import com.example.runningtracking.other.Constants.ACTION_PAUSE_SERVICE

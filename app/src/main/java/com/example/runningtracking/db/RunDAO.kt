@@ -24,7 +24,7 @@ interface RunDAO {
     fun getAllRunsSortedByAvgSpeed(): LiveData<List<Run>>
 
 
-    @Query("select * from running_table order by distanceInMeters desc")
+    @Query("select * from running_table order by distanceInMeters asc")
     fun getAllRunsSortedByDistance(): LiveData<List<Run>>
 
 
