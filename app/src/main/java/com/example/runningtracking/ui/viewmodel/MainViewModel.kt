@@ -8,7 +8,6 @@ import com.example.runningtracking.db.Run
 import com.example.runningtracking.other.SortType
 import com.example.runningtracking.repository.MainRepository
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class MainViewModel @ViewModelInject constructor(
     val mainRepository: MainRepository
